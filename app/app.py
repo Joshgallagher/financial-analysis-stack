@@ -72,10 +72,10 @@ def make_lr_model(symbol):
 
     df = df.withColumn('date_ordinal', date_string_to_ordinal(df.date))
 
-    va = VectorAssembler(inputCols=['close'], outputCol='features')
+    va = VectorAssembler(inputCols=['date_ordinal'], outputCol='features')
     df = va.transform(df)
 
-    lr = LinearRegression(featuresCol='features', labelCol='date_ordinal')
+    lr = LinearRegression(featuresCol='features', labelCol='close')
     lr_model = lr.fit(df)
 
     return lr_model
