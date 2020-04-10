@@ -107,3 +107,7 @@ We concatenated the `AMEX.txt`, `NASDAQ.txt` and `NYSE.txt` files to make `symbo
 For the stock histories, we first merged all the `full_history/<symbol>.csv` files together, with the `<symbol>` in the filename used as a new column value. This was achieved with a Python script, available at [/scripts/merge_stock_histories.py](/scripts/merge_stock_histories.py) to make `stock_histories.csv`. Having one file dramatically reduced the time it took `Hive` to load our data. *Note that was only the case due to how we stored our data.*
 
 We then compressed the generated file using `gzip` to make `stock_histories.csv.gz`. We load from a compressed file because we want to distribute the sample dataset in a smaller file.
+
+## License
+
+We have licensed everything that we wrote for this stack as [MIT](LICENSE.md) :)
