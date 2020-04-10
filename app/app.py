@@ -1,5 +1,6 @@
 from os import getenv
 from datetime import date
+import logging
 
 from redis import Redis
 from pyhive import hive
@@ -10,12 +11,13 @@ from pyspark.sql.functions import udf
 from pyspark.ml.feature import VectorAssembler
 from pyspark.ml.regression import LinearRegression
 
+LOG_FORMAT = 'app:%s'
+
 REDIS_DELIMITER = ':'
 K_STOCKS        = 'stocks'
 K_STOCK_NAME    = 'name'
 K_STOCK_QUERY   = 'query'
 
-# Assign these global vars at runtime
 r          = None
 connection = None
 sc         = None
@@ -34,7 +36,7 @@ def get_name(symbol):
 
         r.set(key, name)
     else:
-        print("Found cache of %s name at %s" % (symbol, key))
+        logging.info("Found cache of %s name at %s" % (symbol, key))
         name = r.get(key).decode('utf-8')
 
     return name
@@ -57,13 +59,14 @@ def make_lr_model(symbol):
         stock_history_rstore = dict(stock_history)
         r.hmset(query_key, stock_history_rstore)
     else:
-        print("Found cache of query at %s" % query_key)
+        logging.info("Found cache of query at %s" % query_key)
         hscan = r.hscan_iter(query_key)
         def unpack(hscan):
             for date_bstr, float_bstr in hscan:
                 yield date_bstr.decode('utf-8'), float(float_bstr)
         stock_history = unpack(hscan)
 
+    logging.info("Transforming data for modeling")
     initial_schema = StructType([
         StructField('date', StringType()),
         StructField('close', FloatType())
@@ -75,6 +78,7 @@ def make_lr_model(symbol):
     va = VectorAssembler(inputCols=['date_ordinal'], outputCol='features')
     df = va.transform(df)
 
+    logging.info("Creating model")
     lr = LinearRegression(featuresCol='features', labelCol='close')
     lr_model = lr.fit(df)
 
@@ -100,37 +104,37 @@ def format_currency(price):
         return '-$' + digits
 
 def main():
+    logging.basicConfig(format=LOG_FORMAT % '%(message)s', level=logging.INFO)
+
     symbol = getenv('APP_SYMBOL')
     date_ = date.fromisoformat(getenv('APP_DATE'))
-    print("symbol: %s, date: %s" % (symbol, str(date)))
 
     global r, connection, sc, spark
-    print("Connecting to Redis")
+    logging.info("Connecting to Redis")
     r = Redis(host='redis', db=0)
-    print("Connecting to Hive")
+    logging.info("Connecting to Hive")
     connection = hive.Connection(host='hive-server')
-    print("Connecting to Spark")
+    logging.info("Connecting to Spark")
     sc = SparkContext.getOrCreate()
     spark = SparkSession(sc)
 
     name = get_name(symbol)
-    print("Finding stock history of %s (%s)" % (name, symbol))
+    logging.info("Finding stock history of %s (%s)" % (name, symbol))
 
     lr_model = make_lr_model(symbol)
     lr_summary = lr_model.summary
-    print("Successfully built linear regression model\n",
+    logging.info("Successfully built linear regression model\n",
           "\t" + "Coefficient:\t%f" % lr_model.coefficients[0] + "\n",
           "\t" + "Intercept:  \t%f" % lr_model.intercept + "\n",
           "\t" + "RMSE:       \t%f" % lr_summary.rootMeanSquaredError + "\n",
           "\t" + "r2:         \t%f" % lr_summary.r2)
 
+    date_f = date_.strftime('%b %d %Y')
+    logging.info("Inputting %s into generated model" % date_f)
     close = predict_close(lr_model, date_.toordinal())
     close_f = format_currency(close)
-    date_f = date_.strftime('%b %d %Y')
-    print("Estimated price of %s at %s:\t%s"
+    logging.info("Estimated price of %s at %s:\t%s"
           % (symbol, date_f, close_f))
 
 if __name__ == "__main__":
-    print("Starting application")
-
     main()
