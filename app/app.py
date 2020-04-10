@@ -1,3 +1,4 @@
+from sys import exit
 from os import getenv
 from datetime import date
 import logging
@@ -32,7 +33,11 @@ def get_name(symbol):
         cursor = connection.cursor()
         cursor.execute('SELECT name FROM symbol_descriptions WHERE symbol="%s"' % symbol)
 
-        name = cursor.fetchone()[0]  # first index of a 1-element tuple
+        try:
+            name = cursor.fetchone()[0]  # first index of a 1-element tuple
+        except TypeError:
+            logging.error("Stock symbol %s does not exist!" % symbol)
+            exit(1)
 
         r.set(key, name)
     else:
