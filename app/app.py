@@ -60,6 +60,9 @@ def make_lr_model(symbol):
         cursor.execute('SELECT date_, close FROM stocks WHERE symbol="%s"' % symbol)
 
         stock_history = cursor.fetchall()
+        if len(stock_history) == 0:
+            print("Stock data not available for %s, sorry!" % symbol)
+            exit(0)
 
         stock_history_rstore = dict(stock_history)
         r.hmset(query_key, stock_history_rstore)
