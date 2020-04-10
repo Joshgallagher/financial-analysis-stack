@@ -3,8 +3,6 @@ This project aims to demonstrate how various distributed data and parallel proce
 
 An example application is provided, which uses the daily close prices of a stock to generate a linear regression model. This model is then used to predict the price of a stock at a given future date.
 
-TODO example images of cli and web app in action `![]()`
-
 ## Setup
 ### Install Docker & Docker Compose
 *Docker* is used to easily deploy containers ([learn more](https://docs.docker.com/get-started/#docker-concepts)). Cross-platform installation instructions are available at [docs.docker.com/get-docker](https://docs.docker.com/get-docker/).
@@ -76,6 +74,11 @@ Finding stock history of Alphabet Cl A (GOOGL)
 SELECT date_, close FROM stocks WHERE symbol="GOOGL"
 Transforming data for modeling
 Creating model
+Successfully built linear regression model
+	Coefficient:	0.184534
+	Intercept:  	-135076.886742
+	RMSE:       	125.296515
+	r2:         	0.838370
 Inputting Apr 10 2021 into generated model
 Estimated price of GOOGL at Apr 10 2021:	$1,088.60
 ```
