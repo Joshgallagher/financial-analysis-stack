@@ -1,5 +1,21 @@
 version: '2.4'
 
+# Service templates are available below
+# The prvided templates allow you to use multiple datanode and workers
+
+# Datanode template
+x-datanode: 
+    &datanode
+    image: bde2020/hadoop-datanode:2.0.0-hadoop2.7.4-java8
+    restart: always
+    depends_on: 
+        - namenode
+    env_file:
+        - ./local.env
+    environment:
+        SERVICE_PRECONDITION: namenode:50070
+
+# Spark Worker template
 x-spark-worker: 
     &spark-worker
     image: bde2020/spark-worker:2.4.5-hadoop2.7
@@ -33,19 +49,19 @@ services:
         ports:
           - 50070:50070
 
-    datanode:
-        image: bde2020/hadoop-datanode:2.0.0-hadoop2.7.4-java8
+    
+    datanode-1:
+        <<: *datanode
+        # You must add a volume to each of the 
+        # Datanode templates you define
         volumes:
-            - datanode:/hadoop/dfs/data
-        restart: always
-        depends_on: 
-            - namenode
-        env_file:
-            - ./local.env
-        environment:
-            SERVICE_PRECONDITION: namenode:50070
-        ports:
-            - 50075:50075
+            - datanode1:/hadoop/dfs/data
+
+    # Example Datanode template
+    # datanode-2:
+    #     <<: *datanode
+    #     volumes:
+    #         - datanode2:/hadoop/dfs/data
 
     hue:
         image: bde2020/hdfs-filebrowser:3.11
@@ -65,14 +81,14 @@ services:
         image: bde2020/hive:2.3.2-postgresql-metastore
         restart: always
         depends_on: 
-            - datanode
+            - datanode-1
             - namenode
             - hive-metastore-postgresql
         env_file:
             - ./local.env
         command: /opt/hive/bin/hive --service metastore
         environment:
-            SERVICE_PRECONDITION: namenode:50070 datanode:50075 hive-metastore-postgresql:5432
+            SERVICE_PRECONDITION: namenode:50070 datanode-1:50075 hive-metastore-postgresql:5432
         ports:
             - 9083:9083
 
@@ -103,8 +119,10 @@ services:
     
     spark-worker-1:
         <<: *spark-worker
-        ports: 
-            - 8081:8081
+
+    # Example Spark Worker template
+    # spark-worker-2:
+    #     <<: *spark-worker
 
     app:
         build: 
@@ -122,5 +140,7 @@ services:
 
 volumes:
     namenode:
-    datanode:
+    datanode1:
+    # Example Datanode volumen
+    # datanode2 
     redis:
