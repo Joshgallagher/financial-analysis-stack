@@ -18,6 +18,9 @@ REDIS_DELIMITER = ':'
 K_STOCKS        = 'stocks'
 K_STOCK_NAME    = 'name'
 K_STOCK_QUERY   = 'query'
+K_STOCK_MODEL   = 'model'
+K_COEFFICIENT   = 'coefficient'
+K_INTERCEPT     = 'intercept'
 
 r          = None
 connection = None
@@ -90,6 +93,11 @@ def make_lr_model(symbol):
     lr = LinearRegression(featuresCol='features', labelCol='close')
     lr_model = lr.fit(df)
 
+    coefficient_key = make_key(K_STOCKS, K_STOCK_MODEL, symbol, K_COEFFICIENT)
+    intercept_key = make_key(K_STOCKS, K_STOCK_MODEL, symbol, K_INTERCEPT)
+    r.set(coefficient_key, str(lr_model.coefficients[0]))
+    r.set(intercept_key, str(lr_model.intercept))
+
     return lr_model
 
 def predict_close(lr_model, date_ordinal):
@@ -131,11 +139,11 @@ def main():
 
     lr_model = make_lr_model(symbol)
     lr_summary = lr_model.summary
-    logging.info("Successfully built linear regression model\n",
-          "\t" + "Coefficient:\t%f" % lr_model.coefficients[0] + "\n",
-          "\t" + "Intercept:  \t%f" % lr_model.intercept + "\n",
-          "\t" + "RMSE:       \t%f" % lr_summary.rootMeanSquaredError + "\n",
-          "\t" + "r2:         \t%f" % lr_summary.r2)
+    logging.info("Successfully built linear regression model")
+    logging.info("\t" + "Coefficient:\t%f" % lr_model.coefficients[0])
+    logging.info("\t" + "Intercept:  \t%f" % lr_model.intercept)
+    logging.info("\t" + "RMSE:       \t%f" % lr_summary.rootMeanSquaredError)
+    logging.info("\t" + "r2:         \t%f" % lr_summary.r2)
 
     date_f = date_.strftime('%b %d %Y')
     logging.info("Inputting %s into generated model" % date_f)

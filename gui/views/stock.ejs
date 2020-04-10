@@ -9,12 +9,20 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
 </head>
 
-<body id="body" data-dates="<%- dates %>" data-value="<%- value %>">
+<body id="body" data-dates="<%- dates %>" data-value="<%- value %>" data-rp="<%- rp %>">
     <div class="columns" style="margin-top: 100px;">
         <div class="column"></div>
         <div class="column is-half">
             <h1 class="is-size-3">Stock: <strong><%= symbol %></strong></h1>
-            <canvas id="myChart" style="width: 100%; height: 500px;"></canvas>
+        </div>
+        <div class="column"></div>
+    </div>
+    <div class="columns">
+        <div class="column"></div>
+        <div class="column is-four-fifths">
+            <canvas id="myChart"></canvas>
+            <hr />
+            <canvas id="myChart2"></canvas>
         </div>
         <div class="column"></div>
     </div>
@@ -24,22 +32,34 @@
             type: 'line',
             data: {
                 labels: document.querySelector("body").dataset.dates.split(','),
-                datasets: [{
-                    label: '# of Votes',
-                    data: document.querySelector("body").dataset.value.split(','),
-                    backgroundColor: ['rgba(255, 99, 132, 0.2)'],
-                    borderColor: ['rgba(255, 99, 132, 1)'],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                scales: {
-                    yAxes: [{
-                        ticks: {
-                            beginAtZero: true
-                        }
-                    }]
-                }
+                datasets: [
+                    {
+                        label: 'Price',
+                        data: document.querySelector("body").dataset.value.split(','),
+                        backgroundColor: ['rgba(255, 99, 132, 0.2)'],
+                        borderColor: ['rgba(255, 99, 132, 1)'],
+                        borderWidth: 1
+                    }
+                ]
+            }
+        });
+
+        var rp = document.querySelector("body").dataset.rp.split(',');
+        var ctx = document.getElementById('myChart2').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [rp[0], rp[2]],
+                datasets: [
+                    {
+                        label: 'Model',
+                        data: [rp[1], rp[3]],
+                        fill: false,
+                        backgroundColor: ['rgba(255, 99, 132, 0.2)'],
+                        borderColor: ['rgba(255, 99, 132, 1)'],
+                        borderWidth: 1
+                    }
+                ]
             }
         });
     </script>
