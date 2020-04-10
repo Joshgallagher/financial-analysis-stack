@@ -1,7 +1,7 @@
 The MIT License (MIT)
 =====================
 
-Copyright © `2020` `Josh Gallagher & Matthew Barber`
+Copyright © `2020` `Joshua Gallagher & Matthew Barber`
 
 Permission is hereby granted, free of charge, to any person
 obtaining a copy of this software and associated documentation
